@@ -349,22 +349,32 @@ function AdminDashboard() {
               {colors.map((color, i) => (
                 <div key={color.id} className="bg-white rounded-xl p-4 shadow-sm">
                   <div className="flex items-center gap-3">
-                    {/* Color preview */}
-                    <div
-                      className="w-12 h-12 rounded-lg shadow-inner"
-                      style={{ background: color.hex }}
-                    />
+                    {/* Color picker - click to open color wheel */}
+                    <label className="relative cursor-pointer group">
+                      <div
+                        className="w-14 h-14 rounded-xl shadow-inner ring-2 ring-slate-200 group-hover:ring-pink-400 transition-all"
+                        style={{ background: color.hex }}
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <span className="text-white text-lg drop-shadow-lg">🎨</span>
+                      </div>
+                      <input
+                        type="color"
+                        value={color.hex.startsWith("#") ? color.hex : "#888888"}
+                        onChange={(e) => updateColor(i, "hex", e.target.value)}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                      />
+                    </label>
                     <div className="flex-1">
                       <input
                         value={color.name}
                         onChange={(e) => updateColor(i, "name", e.target.value)}
-                        className="w-full rounded-lg bg-slate-50 px-2 py-1 text-sm font-bold outline-none ring-1 ring-slate-200 focus:ring-pink-400"
+                        placeholder="Color name"
+                        className="w-full rounded-lg bg-slate-50 px-3 py-2 text-sm font-bold outline-none ring-1 ring-slate-200 focus:ring-pink-400"
                       />
-                      <input
-                        value={color.hex}
-                        onChange={(e) => updateColor(i, "hex", e.target.value)}
-                        className="mt-1 w-full rounded-lg bg-slate-50 px-2 py-1 text-xs font-mono outline-none ring-1 ring-slate-200 focus:ring-pink-400"
-                      />
+                      <div className="mt-1 text-xs text-slate-400 font-mono px-1">
+                        {color.hex}
+                      </div>
                     </div>
                   </div>
                   <div className="mt-3 flex items-center justify-between">
