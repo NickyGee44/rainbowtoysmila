@@ -55,9 +55,9 @@ function Hero() {
           Pick your toys, choose colors, and we&apos;ll make them for you!
         </p>
 
-        <div className="mt-6 inline-flex items-center gap-3 rounded-full bg-white/90 px-6 py-3 shadow-lg ring-2 ring-white/80">
+        <div className="mt-6 inline-flex items-center gap-3 rounded-full bg-white/90 px-5 py-3 shadow-lg ring-2 ring-white/80">
           <span className="text-2xl">🏷️</span>
-          <span className="text-xl font-black text-pink-600">$5 each</span>
+          <span className="text-lg font-black text-pink-600">Pay what you want!</span>
         </div>
 
         <a

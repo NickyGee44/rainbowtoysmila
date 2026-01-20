@@ -3,17 +3,48 @@
 :root {
   --background: #f0e6ff;
   --foreground: #1e293b;
+  /* Safe area insets for notched phones */
+  --sat: env(safe-area-inset-top);
+  --sar: env(safe-area-inset-right);
+  --sab: env(safe-area-inset-bottom);
+  --sal: env(safe-area-inset-left);
+}
+
+* {
+  /* Prevent tap highlight on mobile */
+  -webkit-tap-highlight-color: transparent;
+  /* Smooth touch scrolling */
+  -webkit-overflow-scrolling: touch;
+}
+
+html {
+  scroll-behavior: smooth;
+  /* Prevent iOS font size adjustment */
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: 'Nunito', 'Segoe UI', sans-serif;
+  /* Prevent pull-to-refresh on mobile */
+  overscroll-behavior-y: contain;
+  /* Safe area padding for notched phones */
+  padding-top: var(--sat);
+  padding-left: var(--sal);
+  padding-right: var(--sar);
 }
 
-/* Smooth scrolling */
-html {
-  scroll-behavior: smooth;
+/* Minimum touch target size (44x44px) for accessibility */
+button, a, [role="button"] {
+  min-height: 44px;
+  touch-action: manipulation;
+}
+
+/* Prevent text selection on interactive elements */
+button, [role="button"] {
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 /* Fun selection color */
@@ -68,24 +99,24 @@ input[type="range"] {
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 28px;
-  height: 28px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   background: linear-gradient(135deg, #ec4899, #f472b6);
   cursor: pointer;
   border: 4px solid white;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-  margin-top: -8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  margin-top: -12px;
 }
 
 input[type="range"]::-moz-range-thumb {
-  width: 28px;
-  height: 28px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   background: linear-gradient(135deg, #ec4899, #f472b6);
   cursor: pointer;
   border: 4px solid white;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
 }
 
 input[type="range"]::-webkit-slider-runnable-track {

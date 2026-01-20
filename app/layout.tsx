@@ -14,10 +14,20 @@ export const metadata: Metadata = {
   keywords: ["3D printed toys", "kids toys", "rainbow toys", "Mila", "cute toys", "handmade toys"],
   manifest: "/manifest.json",
   themeColor: "#ec4899",
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
+    viewportFit: "cover",
+  },
   appleWebApp: {
     capable: true,
-    statusBarStyle: "default",
+    statusBarStyle: "black-translucent",
     title: "Rainbow Toys",
+  },
+  formatDetection: {
+    telephone: false,
   },
   icons: {
     icon: "/favicon.png",
