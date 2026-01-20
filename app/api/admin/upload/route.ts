@@ -25,6 +25,18 @@ export async function POST(request: Request) {
   }
 
   try {
+    // Check if Supabase is configured
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    
+    if (!url || !key) {
+      console.error("Missing Supabase config:", { url: !!url, key: !!key });
+      return NextResponse.json(
+        { error: "Supabase not configured. Check environment variables." },
+        { status: 500 }
+      );
+    }
+
     const formData = await request.formData();
     const file = formData.get("file") as File;
     const toyId = formData.get("toyId") as string;
@@ -35,6 +47,8 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
+
+    console.log(`📤 Uploading image for toy: ${toyId}, file: ${file.name}, size: ${file.size}`);
 
     // Generate unique filename
     const ext = file.name.split(".").pop() || "jpg";
