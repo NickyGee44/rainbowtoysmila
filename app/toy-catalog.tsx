@@ -376,7 +376,7 @@ function CartModal({
     return `Hi Matt! 🌈\n\nNew Rainbow Toys order from ${buyerName || "a customer"}:\n\n${itemsList}\n\nTotal: $${total}`;
   };
 
-  const handleTextMatt = () => {
+  const handleTextMatt = async () => {
     if (!buyerName.trim()) {
       setError("Please enter your name");
       return;
@@ -384,6 +384,27 @@ function CartModal({
     if (cart.length === 0) {
       setError("Your cart is empty!");
       return;
+    }
+
+    // Save order to database first
+    try {
+      await fetch("/api/order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items: cart.map((item) => ({
+            toyId: item.toy.id,
+            toyName: item.toy.name,
+            colors: item.colors,
+          })),
+          buyerName: buyerName.trim(),
+          buyerContact: "SMS", // They're texting Matt
+          total,
+        }),
+      });
+    } catch (err) {
+      console.error("Failed to save order:", err);
+      // Continue anyway - still let them text Matt
     }
     
     const smsBody = encodeURIComponent(buildSmsMessage());
