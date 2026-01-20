@@ -1,0 +1,73 @@
+import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
+import { createClient } from "@supabase/supabase-js";
+
+// Create Supabase client with service role for admin uploads
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL || "",
+  process.env.SUPABASE_SERVICE_ROLE_KEY || ""
+);
+
+async function isAuthenticated() {
+  const cookieStore = await cookies();
+  return cookieStore.get("admin_session")?.value === "true";
+}
+
+export async function POST(request: Request) {
+  if (!(await isAuthenticated())) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    const formData = await request.formData();
+    const file = formData.get("file") as File;
+    const toyId = formData.get("toyId") as string;
+
+    if (!file || !toyId) {
+      return NextResponse.json(
+        { error: "File and toyId are required" },
+        { status: 400 }
+      );
+    }
+
+    // Generate unique filename
+    const ext = file.name.split(".").pop() || "jpg";
+    const filename = `${toyId}-${Date.now()}.${ext}`;
+
+    // Convert file to buffer
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    // Upload to Supabase Storage
+    const { data, error } = await supabase.storage
+      .from("toy-images")
+      .upload(filename, buffer, {
+        contentType: file.type,
+        upsert: true,
+      });
+
+    if (error) {
+      console.error("Supabase upload error:", error);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    // Get public URL
+    const { data: urlData } = supabase.storage
+      .from("toy-images")
+      .getPublicUrl(data.path);
+
+    console.log(`✅ Uploaded image for ${toyId}: ${urlData.publicUrl}`);
+
+    return NextResponse.json({ 
+      success: true, 
+      imageUrl: urlData.publicUrl,
+      path: data.path 
+    });
+  } catch (error) {
+    console.error("Upload error:", error);
+    return NextResponse.json(
+      { error: "Failed to upload image" },
+      { status: 500 }
+    );
+  }
+}
