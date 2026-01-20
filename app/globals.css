@@ -89,6 +89,49 @@ button, [role="button"] {
   animation: bounce-in 0.3s ease-out forwards;
 }
 
+/* Scroll down arrow bounce */
+@keyframes bounce-arrow {
+  0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+  40% { transform: translateY(8px); }
+  60% { transform: translateY(4px); }
+}
+
+.animate-bounce-arrow {
+  animation: bounce-arrow 2s ease-in-out infinite;
+}
+
+/* Animated gradient background */
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradient-shift 8s ease infinite;
+}
+
+/* Floating stars/sparkles */
+@keyframes twinkle {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+
+.animate-twinkle {
+  animation: twinkle 3s ease-in-out infinite;
+}
+
+.animate-twinkle-delayed {
+  animation: twinkle 4s ease-in-out infinite;
+  animation-delay: 1.5s;
+}
+
+.animate-twinkle-slow {
+  animation: twinkle 5s ease-in-out infinite;
+  animation-delay: 0.5s;
+}
+
 /* Custom range slider */
 input[type="range"] {
   -webkit-appearance: none;
