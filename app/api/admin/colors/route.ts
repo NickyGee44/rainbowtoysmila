@@ -1,57 +1,86 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { promises as fs } from "fs";
-import path from "path";
+import { getSupabaseClient, getSupabaseAdminClient } from "@/lib/supabase";
 
-const COLORS_PATH = path.join(process.cwd(), "data", "colors.json");
+export const dynamic = "force-dynamic";
 
-// Default colors if file doesn't exist
-const DEFAULT_COLORS = [
-  { id: "pink", name: "Pink", hex: "#ec4899", inStock: true },
-  { id: "red", name: "Red", hex: "#ef4444", inStock: true },
-  { id: "orange", name: "Orange", hex: "#f97316", inStock: true },
-  { id: "yellow", name: "Yellow", hex: "#eab308", inStock: true },
-  { id: "green", name: "Green", hex: "#22c55e", inStock: true },
-  { id: "blue", name: "Blue", hex: "#3b82f6", inStock: true },
-  { id: "purple", name: "Purple", hex: "#a855f7", inStock: true },
-  { id: "white", name: "White", hex: "#f8fafc", inStock: true },
-  { id: "black", name: "Black", hex: "#1e293b", inStock: true },
-  { id: "rainbow", name: "Rainbow", hex: "linear-gradient(90deg, #ef4444, #f97316, #eab308, #22c55e, #3b82f6, #a855f7)", inStock: true },
-];
+// GET - anyone can read colors (for the color picker)
+export async function GET() {
+  try {
+    const supabase = getSupabaseClient();
 
-async function isAuthenticated() {
-  const cookieStore = await cookies();
-  return cookieStore.get("admin_session")?.value === "true";
+    const { data: colors, error } = await supabase
+      .from("colors")
+      .select("*")
+      .order("name");
+
+    if (error) {
+      console.error("Error fetching colors:", error);
+      return NextResponse.json({ colors: [] }, { status: 500 });
+    }
+
+    // Transform to match frontend expected format
+    const formattedColors = colors.map((color) => ({
+      id: color.id,
+      name: color.name,
+      hex: color.hex,
+      inStock: color.in_stock,
+    }));
+
+    return NextResponse.json({ colors: formattedColors });
+  } catch (error) {
+    console.error("Colors API error:", error);
+    return NextResponse.json({ colors: [] }, { status: 500 });
+  }
 }
 
-export async function GET() {
-  // Colors can be read without auth (for the main site)
-  try {
-    const raw = await fs.readFile(COLORS_PATH, "utf8");
-    const colors = JSON.parse(raw);
-    return NextResponse.json({ colors });
-  } catch {
-    // Return defaults if file doesn't exist
-    return NextResponse.json({ colors: DEFAULT_COLORS });
-  }
+// POST/PUT - admin only, update colors
+export async function POST(request: Request) {
+  return updateColors(request);
 }
 
 export async function PUT(request: Request) {
-  if (!(await isAuthenticated())) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  return updateColors(request);
+}
 
+async function updateColors(request: Request) {
   try {
+    // Check admin session
+    const cookieStore = await cookies();
+    const session = cookieStore.get("admin_session");
+    if (session?.value !== "authenticated") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { colors } = await request.json();
-    
-    // Ensure data directory exists
-    const dataDir = path.join(process.cwd(), "data");
-    await fs.mkdir(dataDir, { recursive: true });
-    
-    await fs.writeFile(COLORS_PATH, JSON.stringify(colors, null, 2));
+
+    if (!Array.isArray(colors)) {
+      return NextResponse.json({ error: "Invalid data" }, { status: 400 });
+    }
+
+    const supabase = getSupabaseAdminClient();
+
+    // Delete all existing colors and insert new ones
+    await supabase.from("colors").delete().neq("id", "");
+
+    // Insert new colors
+    const colorsToInsert = colors.map((color: { id: string; name: string; hex: string; inStock?: boolean }) => ({
+      id: color.id,
+      name: color.name,
+      hex: color.hex,
+      in_stock: color.inStock ?? true,
+    }));
+
+    const { error } = await supabase.from("colors").insert(colorsToInsert);
+
+    if (error) {
+      console.error("Error saving colors:", error);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error saving colors:", error);
-    return NextResponse.json({ error: "Failed to save" }, { status: 500 });
+    console.error("Colors save error:", error);
+    return NextResponse.json({ error: "Failed to save colors" }, { status: 500 });
   }
 }

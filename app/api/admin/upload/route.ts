@@ -1,22 +1,10 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { createClient } from "@supabase/supabase-js";
-
-// Create Supabase client lazily to avoid build-time errors
-function getSupabaseClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  
-  if (!url || !key) {
-    throw new Error("Supabase credentials not configured");
-  }
-  
-  return createClient(url, key);
-}
+import { getSupabaseAdminClient } from "@/lib/supabase";
 
 async function isAuthenticated() {
   const cookieStore = await cookies();
-  return cookieStore.get("admin_session")?.value === "true";
+  return cookieStore.get("admin_session")?.value === "authenticated";
 }
 
 export async function POST(request: Request) {
@@ -25,18 +13,6 @@ export async function POST(request: Request) {
   }
 
   try {
-    // Check if Supabase is configured
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    
-    if (!url || !key) {
-      console.error("Missing Supabase config:", { url: !!url, key: !!key });
-      return NextResponse.json(
-        { error: "Supabase not configured. Check environment variables." },
-        { status: 500 }
-      );
-    }
-
     const formData = await request.formData();
     const file = formData.get("file") as File;
     const toyId = formData.get("toyId") as string;
@@ -58,8 +34,8 @@ export async function POST(request: Request) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // Get Supabase client
-    const supabase = getSupabaseClient();
+    // Get Supabase admin client (uses service role key)
+    const supabase = getSupabaseAdminClient();
 
     // Upload to Supabase Storage
     const { data, error } = await supabase.storage
