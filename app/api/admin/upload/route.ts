@@ -2,11 +2,17 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createClient } from "@supabase/supabase-js";
 
-// Create Supabase client with service role for admin uploads
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-  process.env.SUPABASE_SERVICE_ROLE_KEY || ""
-);
+// Create Supabase client lazily to avoid build-time errors
+function getSupabaseClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  
+  if (!url || !key) {
+    throw new Error("Supabase credentials not configured");
+  }
+  
+  return createClient(url, key);
+}
 
 async function isAuthenticated() {
   const cookieStore = await cookies();
@@ -37,6 +43,9 @@ export async function POST(request: Request) {
     // Convert file to buffer
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
+
+    // Get Supabase client
+    const supabase = getSupabaseClient();
 
     // Upload to Supabase Storage
     const { data, error } = await supabase.storage
