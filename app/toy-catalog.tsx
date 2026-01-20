@@ -34,6 +34,7 @@ export default function ToyCatalog() {
   const [activeToy, setActiveToy] = useState<Toy | null>(null);
   const [showCart, setShowCart] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [justAdded, setJustAdded] = useState<CartItem | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -63,8 +64,10 @@ export default function ToyCatalog() {
   }, [toys, query]);
 
   const addToCart = (toy: Toy, colors: string[], price: number) => {
-    setCart((prev) => [...prev, { toy, colors, price }]);
+    const newItem = { toy, colors, price };
+    setCart((prev) => [...prev, newItem]);
     setActiveToy(null);
+    setJustAdded(newItem);
   };
 
   const removeFromCart = (index: number) => {
@@ -133,6 +136,40 @@ export default function ToyCatalog() {
           onClose={() => setActiveToy(null)}
           onAdd={addToCart}
         />
+      )}
+
+      {/* Added to cart popup */}
+      {justAdded && (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4" onClick={() => setJustAdded(null)}>
+          <div
+            className="w-full max-w-xs rounded-[2rem] bg-white p-6 text-center shadow-2xl animate-bounce-in"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="text-5xl">🎉</div>
+            <div className="mt-3 text-xl font-black text-slate-800">Added to Cart!</div>
+            <div className="mt-2 rounded-xl bg-pink-50 p-3">
+              <div className="font-bold text-slate-700">{justAdded.toy.name}</div>
+              <div className="text-sm text-slate-500">{justAdded.colors.join(", ")} • ${justAdded.price}</div>
+            </div>
+            
+            <button
+              onClick={() => {
+                setJustAdded(null);
+                setShowCart(true);
+              }}
+              className="mt-5 w-full rounded-full bg-gradient-to-r from-pink-500 to-pink-600 py-3 font-black text-white shadow-lg"
+            >
+              🛒 View Cart ({cart.length})
+            </button>
+            
+            <button
+              onClick={() => setJustAdded(null)}
+              className="mt-2 w-full rounded-full bg-slate-100 py-3 font-bold text-slate-600"
+            >
+              Keep Shopping 🧸
+            </button>
+          </div>
+        </div>
       )}
 
       {/* Cart modal */}
