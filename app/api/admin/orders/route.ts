@@ -2,11 +2,9 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { getSupabaseAdminClient } from "@/lib/supabase";
 
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "rainbow123";
-
 async function isAuthenticated() {
   const cookieStore = await cookies();
-  return cookieStore.get("admin_session")?.value === ADMIN_PASSWORD;
+  return cookieStore.get("admin_session")?.value === "authenticated";
 }
 
 // GET - Fetch all orders

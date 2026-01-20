@@ -48,13 +48,13 @@ function Hero() {
 
       {/* Poster */}
       <div className="relative mx-auto max-w-md">
-        <div className="rounded-[2rem] bg-white/90 p-3 shadow-2xl ring-4 ring-white/80">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/poster.png"
-            alt="Rainbow Toys by Mila"
-            className="w-full rounded-[1.5rem] shadow-lg"
-          />
+          <div className="rounded-[2rem] bg-white/90 p-3 shadow-2xl ring-4 ring-white/80">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/poster.png"
+              alt="Rainbow Toys by Mila"
+              className="w-full rounded-[1.5rem] shadow-lg"
+            />
         </div>
       </div>
 
@@ -70,15 +70,15 @@ function Hero() {
       </a>
 
       {/* Mobile scroll indicator (centered below poster) */}
-      <a
-        href="#catalog"
+        <a
+          href="#catalog"
         className="sm:hidden fixed bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 animate-bounce-arrow z-10"
-      >
+        >
         <span className="text-xs font-bold text-white drop-shadow-lg bg-pink-500/80 px-3 py-1 rounded-full">
           scroll down
         </span>
         <span className="text-2xl drop-shadow-lg">👇</span>
-      </a>
+        </a>
     </section>
   );
 }
