@@ -208,6 +208,53 @@ function AdminDashboard() {
     window.location.reload();
   };
 
+  const addNewToy = async () => {
+    setMessage("Creating new toy...");
+    try {
+      const res = await fetch("/api/admin/catalog", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "create",
+          toy: {
+            id: `toy-${Date.now()}`,
+            name: "New Toy",
+            description: "Add a description",
+          },
+        }),
+      });
+
+      if (!res.ok) throw new Error("Failed to create toy");
+
+      const data = await res.json();
+      setToys((prev) => [data.toy, ...prev]);
+      setMessage("New toy added! Edit it below 👇");
+    } catch (error) {
+      console.error(error);
+      setMessage("❌ Failed to create toy");
+    }
+  };
+
+  const deleteToy = async (toyId: string, toyName: string) => {
+    if (!confirm(`Delete "${toyName}"? This cannot be undone.`)) return;
+
+    try {
+      const res = await fetch("/api/admin/catalog", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: toyId }),
+      });
+
+      if (!res.ok) throw new Error("Failed to delete");
+
+      setToys((prev) => prev.filter((t) => t.id !== toyId));
+      setMessage(`Deleted "${toyName}" ✅`);
+    } catch (error) {
+      console.error(error);
+      setMessage("❌ Failed to delete toy");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-100">
       {/* Header */}
@@ -256,7 +303,13 @@ function AdminDashboard() {
         {/* Catalog Tab */}
         {tab === "catalog" && (
           <div className="mt-4">
-            <div className="flex justify-end mb-4">
+            <div className="flex justify-between mb-4">
+              <button
+                onClick={addNewToy}
+                className="rounded-lg bg-blue-500 px-4 py-2 font-bold text-white hover:bg-blue-600"
+              >
+                + Add New Toy
+              </button>
               <button
                 onClick={saveCatalog}
                 disabled={saving}
@@ -317,6 +370,14 @@ function AdminDashboard() {
                           onChange={(e) => updateToy(i, "description", e.target.value)}
                           className="w-full rounded-lg bg-slate-50 px-3 py-2 text-sm font-semibold outline-none ring-1 ring-slate-200 focus:ring-pink-400"
                         />
+                      </div>
+                      <div className="flex justify-end pt-2">
+                        <button
+                          onClick={() => deleteToy(toy.id, toy.name)}
+                          className="text-xs font-bold text-red-400 hover:text-red-600"
+                        >
+                          🗑️ Delete Toy
+                        </button>
                       </div>
                     </div>
                   </div>
