@@ -16,9 +16,8 @@ type Toy = {
 type CartItem = {
   toy: Toy;
   colors: string[];
+  price: number;
 };
-
-const PRICE = 5; // $5 per toy
 
 type ColorOption = {
   id: string;
@@ -63,8 +62,8 @@ export default function ToyCatalog() {
     );
   }, [toys, query]);
 
-  const addToCart = (toy: Toy, colors: string[]) => {
-    setCart((prev) => [...prev, { toy, colors }]);
+  const addToCart = (toy: Toy, colors: string[], price: number) => {
+    setCart((prev) => [...prev, { toy, colors, price }]);
     setActiveToy(null);
   };
 
@@ -72,7 +71,7 @@ export default function ToyCatalog() {
     setCart((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const total = cart.length * PRICE;
+  const total = cart.reduce((sum, item) => sum + item.price, 0);
 
   return (
     <>
@@ -173,7 +172,7 @@ function ToyCard({ toy, onSelect }: { toy: Toy; onSelect: () => void }) {
       <div className="mt-3 flex items-start justify-between gap-2">
         <div>
           <div className="font-bold text-slate-800 leading-tight">{toy.name}</div>
-          <div className="mt-1 text-lg font-black text-pink-600">${PRICE}</div>
+          <div className="mt-1 text-sm font-bold text-pink-600">$1 - $10</div>
         </div>
         <div className="rounded-full bg-pink-100 px-3 py-1 text-sm font-bold text-pink-700">
           + Add
@@ -192,9 +191,10 @@ function ColorPickerModal({
   toy: Toy;
   colors: ColorOption[];
   onClose: () => void;
-  onAdd: (toy: Toy, colors: string[]) => void;
+  onAdd: (toy: Toy, colors: string[], price: number) => void;
 }) {
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
+  const [price, setPrice] = useState(5);
 
   const toggleColor = (colorId: string) => {
     setSelectedColors((prev) =>
@@ -208,12 +208,12 @@ function ColorPickerModal({
     if (selectedColors.length === 0) {
       // Default to first color if nothing selected
       const firstColor = colors[0]?.name || "Rainbow";
-      onAdd(toy, [firstColor]);
+      onAdd(toy, [firstColor], price);
     } else {
       const colorNames = selectedColors.map(
         (id) => colors.find((c) => c.id === id)?.name ?? id
       );
-      onAdd(toy, colorNames);
+      onAdd(toy, colorNames, price);
     }
   };
 
@@ -235,7 +235,31 @@ function ColorPickerModal({
           </div>
           <div>
             <div className="text-xl font-black text-slate-800">{toy.name}</div>
-            <div className="text-2xl font-black text-pink-600">${PRICE}</div>
+            <div className="text-sm font-bold text-slate-500">Pick your price below!</div>
+          </div>
+        </div>
+
+        {/* Price slider */}
+        <div className="mt-6">
+          <div className="flex items-center justify-between">
+            <div className="font-bold text-slate-700">Your price:</div>
+            <div className="text-3xl font-black text-pink-600">${price}</div>
+          </div>
+          <input
+            type="range"
+            min={1}
+            max={10}
+            value={price}
+            onChange={(e) => setPrice(Number(e.target.value))}
+            className="mt-3 w-full h-3 rounded-full appearance-none cursor-pointer"
+            style={{
+              background: `linear-gradient(to right, #ec4899 0%, #ec4899 ${(price - 1) * 11.1}%, #e2e8f0 ${(price - 1) * 11.1}%, #e2e8f0 100%)`,
+            }}
+          />
+          <div className="mt-1 flex justify-between text-xs font-bold text-slate-400">
+            <span>$1</span>
+            <span>$5</span>
+            <span>$10</span>
           </div>
         </div>
 
@@ -302,7 +326,7 @@ function CartModal({
   const [buyerName, setBuyerName] = useState("");
   const [error, setError] = useState("");
 
-  const total = cart.length * PRICE;
+  const total = cart.reduce((sum, item) => sum + item.price, 0);
   
   // Matt's phone from env (set in Vercel)
   const mattPhone = process.env.NEXT_PUBLIC_MATT_PHONE || "";
@@ -310,7 +334,7 @@ function CartModal({
   // Build SMS message
   const buildSmsMessage = () => {
     const itemsList = cart
-      .map((item) => `• ${item.toy.name} (${item.colors.join(", ")})`)
+      .map((item) => `• ${item.toy.name} (${item.colors.join(", ")}) - $${item.price}`)
       .join("\n");
     return `Hi Matt! 🌈\n\nNew Rainbow Toys order from ${buyerName || "a customer"}:\n\n${itemsList}\n\nTotal: $${total}`;
   };
@@ -376,7 +400,7 @@ function CartModal({
                     <div className="text-sm text-slate-600">{item.colors.join(", ")}</div>
                   </div>
                   <div className="text-right">
-                    <div className="font-bold text-pink-600">${PRICE}</div>
+                    <div className="font-bold text-pink-600">${item.price}</div>
                     <button
                       onClick={() => onRemove(i)}
                       className="text-xs font-bold text-slate-400 hover:text-red-500"
