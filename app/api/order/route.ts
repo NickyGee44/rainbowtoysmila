@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
+import { getSupabaseAdminClient } from "@/lib/supabase";
 
 type OrderItem = {
   toyId: string;
@@ -12,9 +13,14 @@ type OrderRequest = {
   buyerName: string;
   buyerContact: string;
   total: number;
+  notes?: string;
 };
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazy initialization to avoid build-time errors
+function getResend() {
+  return new Resend(process.env.RESEND_API_KEY);
+}
+
 const MATT_EMAIL = process.env.MATT_EMAIL || "grossi16n@hotmail.com";
 const MATT_PHONE = process.env.MATT_PHONE || "";
 
@@ -35,10 +41,33 @@ export async function POST(request: Request) {
       hour12: true,
     });
 
+    // Save order to database
+    const supabase = getSupabaseAdminClient();
+    const orderId = `order-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    
+    const { error: dbError } = await supabase.from("orders").insert({
+      id: orderId,
+      buyer_name: order.buyerName,
+      buyer_contact: order.buyerContact,
+      items: order.items,
+      total: order.total,
+      notes: order.notes || null,
+      is_completed: false,
+      is_paid: false,
+    });
+
+    if (dbError) {
+      console.error("Database error saving order:", dbError);
+      // Continue anyway - still send email
+    } else {
+      console.log(`✅ Order saved to database: ${orderId}`);
+    }
+
     // Log the order
     console.log("\n🌈 ========================================");
     console.log("🧸 NEW RAINBOW TOYS ORDER!");
     console.log("========================================");
+    console.log(`Order ID: ${orderId}`);
     console.log(`Customer: ${order.buyerName}`);
     console.log(`Contact: ${order.buyerContact}`);
     console.log(`Total: $${order.total}`);
@@ -51,6 +80,7 @@ export async function POST(request: Request) {
 
     // Send email
     if (process.env.RESEND_API_KEY) {
+      const resend = getResend();
       const itemsList = order.items
         .map((item) => `<li><strong>${item.toyName}</strong> — ${item.colors.join(", ")}</li>`)
         .join("");

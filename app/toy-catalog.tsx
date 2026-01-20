@@ -192,16 +192,16 @@ function ToyCard({ toy, onSelect }: { toy: Toy; onSelect: () => void }) {
       className="group rounded-2xl bg-white/90 p-3 text-left shadow-md ring-1 ring-white/80 transition-all hover:-translate-y-1 hover:shadow-lg"
     >
       {/* Image */}
-      <div className="overflow-hidden rounded-xl bg-gradient-to-b from-sky-50 to-pink-50">
+      <div className="aspect-square overflow-hidden rounded-xl bg-gradient-to-b from-sky-50 to-pink-50">
         {toy.imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={toy.imageUrl}
             alt={toy.name}
-            className="h-32 w-full object-cover sm:h-40"
+            className="h-full w-full object-contain"
           />
         ) : (
-          <div className="grid h-32 place-items-center text-4xl sm:h-40">🌈</div>
+          <div className="grid h-full place-items-center text-4xl">🌈</div>
         )}
       </div>
 

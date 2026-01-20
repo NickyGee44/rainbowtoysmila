@@ -25,47 +25,16 @@ export default function Home() {
 
 function Hero() {
   return (
-    <section className="grid gap-8 lg:grid-cols-2 lg:items-center">
-      {/* Left side - Mila's Poster */}
-      <div className="relative order-2 lg:order-1">
-        <div className="relative mx-auto max-w-sm lg:max-w-none">
-          <div className="rounded-[2rem] bg-white/90 p-3 shadow-2xl ring-4 ring-white/80">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/poster.png"
-              alt="Rainbow Toys by Mila"
-              className="w-full rounded-[1.5rem] shadow-lg"
-            />
-          </div>
+    <section className="flex justify-center">
+      <div className="relative mx-auto max-w-md">
+        <div className="rounded-[2rem] bg-white/90 p-3 shadow-2xl ring-4 ring-white/80">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/poster.png"
+            alt="Rainbow Toys by Mila"
+            className="w-full rounded-[1.5rem] shadow-lg"
+          />
         </div>
-      </div>
-
-      {/* Right side - Simple text */}
-      <div className="order-1 text-center lg:order-2 lg:text-left">
-        <h1 className="text-4xl font-black tracking-tight sm:text-5xl">
-          <span className="bg-gradient-to-r from-pink-600 via-purple-500 to-sky-500 bg-clip-text text-transparent">
-            Rainbow Toys
-          </span>{" "}
-          <span className="text-pink-600">by Mila</span>
-        </h1>
-
-        <p className="mt-4 text-lg font-semibold text-slate-700 sm:text-xl">
-          Cute 3D-printed toys made with love! 💖
-          <br />
-          Pick your toys, choose colors, and we&apos;ll make them for you!
-        </p>
-
-        <div className="mt-6 inline-flex items-center gap-3 rounded-full bg-white/90 px-5 py-3 shadow-lg ring-2 ring-white/80">
-          <span className="text-2xl">🏷️</span>
-          <span className="text-lg font-black text-pink-600">Pay what you want!</span>
-        </div>
-
-        <a
-          href="#catalog"
-          className="mt-6 block rounded-full bg-gradient-to-r from-pink-500 to-pink-600 px-8 py-4 text-center text-lg font-black text-white shadow-lg transition-all hover:-translate-y-1 hover:shadow-xl sm:inline-block"
-        >
-          See All Toys 🧸
-        </a>
       </div>
     </section>
   );
