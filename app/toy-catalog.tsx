@@ -300,107 +300,43 @@ function CartModal({
   onClearCart: () => void;
 }) {
   const [buyerName, setBuyerName] = useState("");
-  const [buyerContact, setBuyerContact] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
-  const [orderSummary, setOrderSummary] = useState<{ items: CartItem[]; total: number; mattPhone: string } | null>(null);
 
   const total = cart.length * PRICE;
+  
+  // Matt's phone from env (set in Vercel)
+  const mattPhone = process.env.NEXT_PUBLIC_MATT_PHONE || "";
 
-  const handleSubmit = async () => {
+  // Build SMS message
+  const buildSmsMessage = () => {
+    const itemsList = cart
+      .map((item) => `• ${item.toy.name} (${item.colors.join(", ")})`)
+      .join("\n");
+    return `Hi Matt! 🌈\n\nNew Rainbow Toys order from ${buyerName || "a customer"}:\n\n${itemsList}\n\nTotal: $${total}`;
+  };
+
+  const handleTextMatt = () => {
     if (!buyerName.trim()) {
       setError("Please enter your name");
-      return;
-    }
-    if (!buyerContact.trim()) {
-      setError("Please enter email or phone");
       return;
     }
     if (cart.length === 0) {
       setError("Your cart is empty!");
       return;
     }
-
-    setSubmitting(true);
-    setError("");
-
-    // Store cart items before clearing
-    const orderItems = [...cart];
-    const orderTotal = total;
-
-    try {
-      const res = await fetch("/api/order", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          items: cart.map((item) => ({
-            toyId: item.toy.id,
-            toyName: item.toy.name,
-            colors: item.colors,
-          })),
-          buyerName: buyerName.trim(),
-          buyerContact: buyerContact.trim(),
-          total,
-        }),
-      });
-
-      if (!res.ok) throw new Error("Failed to submit");
-      
-      const data = await res.json();
-      setOrderSummary({
-        items: orderItems,
-        total: orderTotal,
-        mattPhone: data.mattPhone || "",
-      });
-      setSubmitted(true);
-      onClearCart();
-    } catch {
-      setError("Something went wrong. Please try again!");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  // Build SMS message
-  const buildSmsMessage = () => {
-    if (!orderSummary) return "";
-    const itemsList = orderSummary.items
-      .map((item) => `${item.toy.name} (${item.colors.join(", ")})`)
-      .join(", ");
-    return `Hi! I just ordered from Rainbow Toys by Mila:\n\n${itemsList}\n\nTotal: $${orderSummary.total}\n\nFrom: ${buyerName}\nContact: ${buyerContact}`;
-  };
-
-  if (submitted && orderSummary) {
+    
     const smsBody = encodeURIComponent(buildSmsMessage());
-    const smsLink = `sms:${orderSummary.mattPhone}?body=${smsBody}`;
-
-    return (
-      <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-4" onClick={onClose}>
-        <div className="w-full max-w-sm rounded-[2rem] bg-white p-8 text-center shadow-2xl" onClick={(e) => e.stopPropagation()}>
-          <div className="text-6xl">🎉</div>
-          <div className="mt-4 text-2xl font-black text-slate-800">Order Sent!</div>
-          <p className="mt-2 font-semibold text-slate-600">
-            Email sent! Now text Matt to confirm:
-          </p>
-          
-          <a
-            href={smsLink}
-            className="mt-4 block w-full rounded-full bg-gradient-to-r from-green-500 to-green-600 py-4 text-lg font-black text-white shadow-lg"
-          >
-            📱 Text Matt
-          </a>
-          
-          <button
-            onClick={onClose}
-            className="mt-3 w-full rounded-full bg-slate-100 py-3 font-bold text-slate-600"
-          >
-            Yay! ✨
-          </button>
-        </div>
-      </div>
-    );
-  }
+    const smsLink = `sms:${mattPhone}?body=${smsBody}`;
+    
+    // Open SMS app
+    window.location.href = smsLink;
+    
+    // Clear cart after a short delay
+    setTimeout(() => {
+      onClearCart();
+      onClose();
+    }, 500);
+  };
 
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-4" onClick={onClose}>
@@ -459,19 +395,12 @@ function CartModal({
             </div>
 
             {/* Order form */}
-            <div className="mt-6 space-y-3">
+            <div className="mt-6">
               <input
                 type="text"
                 value={buyerName}
                 onChange={(e) => setBuyerName(e.target.value)}
                 placeholder="Your name"
-                className="w-full rounded-xl bg-slate-50 px-4 py-3 font-semibold outline-none ring-1 ring-slate-200 placeholder:text-slate-400 focus:ring-2 focus:ring-pink-400"
-              />
-              <input
-                type="text"
-                value={buyerContact}
-                onChange={(e) => setBuyerContact(e.target.value)}
-                placeholder="Email or phone"
                 className="w-full rounded-xl bg-slate-50 px-4 py-3 font-semibold outline-none ring-1 ring-slate-200 placeholder:text-slate-400 focus:ring-2 focus:ring-pink-400"
               />
             </div>
@@ -482,13 +411,12 @@ function CartModal({
               </div>
             )}
 
-            {/* Submit */}
+            {/* Submit - opens SMS */}
             <button
-              onClick={handleSubmit}
-              disabled={submitting}
-              className="mt-6 w-full rounded-full bg-gradient-to-r from-pink-500 to-pink-600 py-4 text-lg font-black text-white disabled:opacity-50"
+              onClick={handleTextMatt}
+              className="mt-6 w-full rounded-full bg-gradient-to-r from-green-500 to-green-600 py-4 text-lg font-black text-white shadow-lg"
             >
-              {submitting ? "Sending..." : `Send Order 💌`}
+              📱 Text Matt The Order
             </button>
 
             <button
