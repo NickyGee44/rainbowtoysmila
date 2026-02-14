@@ -1,13 +1,23 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "mila2026";
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+
+if (!ADMIN_PASSWORD) {
+  console.error("CRITICAL: ADMIN_PASSWORD environment variable is not set!");
+}
 
 export async function POST(request: Request) {
+  if (!ADMIN_PASSWORD) {
+    return NextResponse.json(
+      { error: "Admin login is not configured" },
+      { status: 503 }
+    );
+  }
+
   const { password } = await request.json();
 
   if (password === ADMIN_PASSWORD) {
-    // Set a simple session cookie
     const cookieStore = await cookies();
     cookieStore.set("admin_session", "authenticated", {
       httpOnly: true,

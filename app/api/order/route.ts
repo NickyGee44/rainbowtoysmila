@@ -21,7 +21,10 @@ function getResend() {
   return new Resend(process.env.RESEND_API_KEY);
 }
 
-const MATT_EMAIL = process.env.MATT_EMAIL || "grossi16n@hotmail.com";
+const MATT_EMAIL = process.env.MATT_EMAIL;
+if (!MATT_EMAIL) {
+  console.error("WARNING: MATT_EMAIL environment variable is not set");
+}
 const MATT_PHONE = process.env.MATT_PHONE || "";
 
 export async function POST(request: Request) {
