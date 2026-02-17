@@ -11,6 +11,8 @@ type Toy = {
   difficulty?: "easy" | "medium" | "hard";
   printTimeHours?: number;
   tags?: string[];
+  featured?: boolean;
+  createdAt?: string;
 };
 
 type CartItem = {
@@ -30,6 +32,7 @@ export default function ToyCatalog() {
   const [toys, setToys] = useState<Toy[]>([]);
   const [colors, setColors] = useState<ColorOption[]>([]);
   const [query, setQuery] = useState("");
+  const [activeTag, setActiveTag] = useState<string | null>(null);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [activeToy, setActiveToy] = useState<Toy | null>(null);
   const [showCart, setShowCart] = useState(false);
@@ -55,13 +58,32 @@ export default function ToyCatalog() {
     })();
   }, []);
 
+  // Extract unique tags for filter pills
+  const allTags = useMemo(() => {
+    const tagSet = new Set<string>();
+    toys.forEach((t) => (t.tags ?? []).forEach((tag) => tagSet.add(tag)));
+    return Array.from(tagSet).sort();
+  }, [toys]);
+
+  // Split featured toys
+  const featuredToys = useMemo(() => toys.filter((t) => t.featured), [toys]);
+
+  // Check if searching/filtering is active
+  const isFiltering = query.trim() !== "" || activeTag !== null;
+
   const filtered = useMemo(() => {
+    let result = toys;
     const q = query.trim().toLowerCase();
-    if (!q) return toys;
-    return toys.filter((t) =>
-      (t.name + " " + (t.tags ?? []).join(" ")).toLowerCase().includes(q)
-    );
-  }, [toys, query]);
+    if (q) {
+      result = result.filter((t) =>
+        (t.name + " " + (t.tags ?? []).join(" ")).toLowerCase().includes(q)
+      );
+    }
+    if (activeTag) {
+      result = result.filter((t) => (t.tags ?? []).includes(activeTag));
+    }
+    return result;
+  }, [toys, query, activeTag]);
 
   const addToCart = (toy: Toy, colors: string[], price: number) => {
     const newItem = { toy, colors, price };
@@ -106,6 +128,48 @@ export default function ToyCatalog() {
           </div>
         </div>
 
+        {/* Tag filter pills */}
+        {!loading && allTags.length > 0 && (
+          <div className="mt-4 flex flex-wrap gap-2">
+            {allTags.map((tag) => (
+              <button
+                key={tag}
+                onClick={() => setActiveTag(activeTag === tag ? null : tag)}
+                className={`rounded-full px-3 py-1.5 text-xs font-bold capitalize transition-all ${
+                  activeTag === tag
+                    ? "bg-pink-500 text-white shadow-md scale-105"
+                    : "bg-white/80 text-slate-600 ring-1 ring-slate-200 hover:bg-pink-50 hover:text-pink-600"
+                }`}
+              >
+                {tag}
+              </button>
+            ))}
+            {activeTag && (
+              <button
+                onClick={() => setActiveTag(null)}
+                className="rounded-full px-3 py-1.5 text-xs font-bold text-slate-400 hover:text-slate-600"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Hot Right Now section */}
+        {!loading && !isFiltering && featuredToys.length > 0 && (
+          <div className="mt-6">
+            <div className="mb-3 text-lg font-black text-slate-700">
+              🔥 Hot Right Now
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {featuredToys.map((toy) => (
+                <ToyCard key={toy.id} toy={toy} onSelect={() => setActiveToy(toy)} />
+              ))}
+            </div>
+            <div className="mt-6 border-t border-slate-200/60" />
+          </div>
+        )}
+
         {/* Toy grid */}
         <div className="mt-6">
           {loading ? (
@@ -119,11 +183,18 @@ export default function ToyCatalog() {
               <div className="mt-2 font-bold text-slate-600">No toys found</div>
             </div>
           ) : (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {filtered.map((toy) => (
-                <ToyCard key={toy.id} toy={toy} onSelect={() => setActiveToy(toy)} />
-              ))}
-            </div>
+            <>
+              {!isFiltering && featuredToys.length > 0 && (
+                <div className="mb-3 text-lg font-black text-slate-700">
+                  🧸 All Toys
+                </div>
+              )}
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {filtered.map((toy) => (
+                  <ToyCard key={toy.id} toy={toy} onSelect={() => setActiveToy(toy)} />
+                ))}
+              </div>
+            </>
           )}
         </div>
       </div>
@@ -186,11 +257,29 @@ export default function ToyCatalog() {
 }
 
 function ToyCard({ toy, onSelect }: { toy: Toy; onSelect: () => void }) {
+  const isNew = toy.createdAt
+    ? Date.now() - new Date(toy.createdAt).getTime() < 14 * 24 * 60 * 60 * 1000
+    : false;
+
   return (
     <button
       onClick={onSelect}
-      className="group rounded-2xl bg-white/90 p-3 text-left shadow-md ring-1 ring-white/80 transition-all hover:-translate-y-1 hover:shadow-lg"
+      className="group relative rounded-2xl bg-white/90 p-3 text-left shadow-md ring-1 ring-white/80 transition-all hover:-translate-y-1 hover:shadow-lg"
     >
+      {/* Badges */}
+      <div className="absolute top-2 right-2 z-10 flex flex-col gap-1">
+        {toy.featured && (
+          <span className="rounded-full bg-orange-500 px-2 py-0.5 text-xs font-black text-white shadow-md">
+            🔥 Hot
+          </span>
+        )}
+        {isNew && (
+          <span className="animate-badge-pulse rounded-full bg-green-500 px-2 py-0.5 text-xs font-black text-white shadow-md">
+            New!
+          </span>
+        )}
+      </div>
+
       {/* Image */}
       <div className="aspect-square overflow-hidden rounded-xl bg-gradient-to-b from-sky-50 to-pink-50">
         {toy.imageUrl ? (
@@ -362,9 +451,10 @@ function CartModal({
 }) {
   const [buyerName, setBuyerName] = useState("");
   const [error, setError] = useState("");
+  const [orderSent, setOrderSent] = useState(false);
 
   const total = cart.reduce((sum, item) => sum + item.price, 0);
-  
+
   // Matt's phone from env (set in Vercel)
   const mattPhone = process.env.NEXT_PUBLIC_MATT_PHONE || "";
 
@@ -406,26 +496,58 @@ function CartModal({
       console.error("Failed to save order:", err);
       // Continue anyway - still let them text Matt
     }
-    
+
     const smsBody = encodeURIComponent(buildSmsMessage());
     const smsLink = `sms:${mattPhone}?body=${smsBody}`;
-    
+
     // Open SMS app
     window.location.href = smsLink;
-    
-    // Clear cart after a short delay
+
+    // Show celebration, then clear cart
+    setOrderSent(true);
     setTimeout(() => {
       onClearCart();
       onClose();
-    }, 500);
+    }, 3000);
   };
 
+  // Confetti emoji particles
+  const confettiPieces = ["🌈", "⭐", "🎉", "💖", "✨", "🧸", "🎀", "💫"];
+
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-4" onClick={orderSent ? undefined : onClose}>
       <div
-        className="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-[2rem] bg-white p-6 shadow-2xl"
+        className="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-[2rem] bg-white p-6 shadow-2xl relative overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Celebration overlay */}
+        {orderSent && (
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/95 rounded-[2rem]">
+            {/* Confetti */}
+            {confettiPieces.map((emoji, i) => (
+              <div
+                key={i}
+                className="animate-confetti absolute text-2xl"
+                style={{
+                  left: `${10 + i * 11}%`,
+                  top: "-20px",
+                  animationDelay: `${i * 0.15}s`,
+                }}
+              >
+                {emoji}
+              </div>
+            ))}
+            <div className="animate-celebrate-pop text-center">
+              <div className="text-6xl">🎉</div>
+              <div className="mt-4 text-2xl font-black text-slate-800">Order Sent!</div>
+              <div className="mt-2 text-sm font-bold text-slate-500">
+                Mila will have your toys ready soon!
+              </div>
+              <div className="mt-4 text-4xl animate-bounce">🌈</div>
+            </div>
+          </div>
+        )}
+
         <div className="text-2xl font-black text-slate-800">🛒 Your Cart</div>
 
         {cart.length === 0 ? (

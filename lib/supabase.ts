@@ -35,6 +35,8 @@ export type Toy = {
   difficulty: string;
   print_time_hours: number;
   license_status: string;
+  featured: boolean;
+  created_at: string | null;
 };
 
 export type Color = {

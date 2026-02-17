@@ -34,6 +34,7 @@ export async function GET() {
       imageUrl: toy.image_url,
       sourceUrl: toy.source_url,
       tags: toy.tags,
+      featured: toy.featured ?? false,
     }));
 
     return NextResponse.json({ toys: formattedToys });
@@ -105,6 +106,7 @@ export async function POST(request: Request) {
           name: toy.name,
           description: toy.description,
           image_url: toy.imageUrl,
+          featured: toy.featured ?? false,
         })
         .eq("id", toy.id);
 
@@ -146,6 +148,7 @@ export async function PUT(request: Request) {
           name: toy.name,
           description: toy.description,
           image_url: toy.imageUrl,
+          featured: toy.featured ?? false,
         })
         .eq("id", toy.id);
 

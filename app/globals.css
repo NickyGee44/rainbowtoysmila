@@ -171,3 +171,34 @@ input[type="range"]::-moz-range-track {
   height: 12px;
   border-radius: 6px;
 }
+
+/* New badge pulse */
+@keyframes badge-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+
+.animate-badge-pulse {
+  animation: badge-pulse 2s ease-in-out infinite;
+}
+
+/* Order celebration pop */
+@keyframes celebrate-pop {
+  0% { transform: scale(0); opacity: 0; }
+  50% { transform: scale(1.15); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.animate-celebrate-pop {
+  animation: celebrate-pop 0.5s ease-out forwards;
+}
+
+/* Confetti fall */
+@keyframes confetti-fall {
+  0% { transform: translateY(-10px) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(300px) rotate(720deg); opacity: 0; }
+}
+
+.animate-confetti {
+  animation: confetti-fall 2.5s ease-in forwards;
+}

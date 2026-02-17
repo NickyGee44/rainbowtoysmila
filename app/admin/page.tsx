@@ -11,6 +11,7 @@ type Toy = {
   difficulty?: string;
   printTimeHours?: number;
   tags?: string[];
+  featured?: boolean;
 };
 
 type Color = {
@@ -473,7 +474,23 @@ function AdminDashboard() {
                           className="w-full rounded-lg bg-slate-50 px-3 py-2 text-sm font-semibold outline-none ring-1 ring-slate-200 focus:ring-pink-400"
                         />
                       </div>
-                      <div className="flex justify-end pt-2">
+                      <div className="flex justify-between items-center pt-2">
+                        <button
+                          onClick={() => {
+                            setToys((prev) => {
+                              const updated = [...prev];
+                              updated[i] = { ...updated[i], featured: !updated[i].featured };
+                              return updated;
+                            });
+                          }}
+                          className={`rounded-full px-3 py-1 text-xs font-bold transition-all ${
+                            toy.featured
+                              ? "bg-orange-100 text-orange-700 ring-2 ring-orange-300"
+                              : "bg-slate-100 text-slate-500 hover:bg-orange-50"
+                          }`}
+                        >
+                          {toy.featured ? "🔥 Featured" : "☆ Feature"}
+                        </button>
                         <button
                           onClick={() => deleteToy(toy.id, toy.name)}
                           className="text-xs font-bold text-red-400 hover:text-red-600"

@@ -11,6 +11,7 @@ export async function GET() {
       .from("toys")
       .select("*")
       .neq("license_status", "ip-risk")
+      .order("featured", { ascending: false })
       .order("name");
 
     if (error) {
@@ -28,6 +29,8 @@ export async function GET() {
       tags: toy.tags,
       difficulty: toy.difficulty,
       printTimeHours: toy.print_time_hours,
+      featured: toy.featured ?? false,
+      createdAt: toy.created_at ?? null,
     }));
 
     return NextResponse.json({ toys: formattedToys });
