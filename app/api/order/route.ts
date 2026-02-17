@@ -82,7 +82,7 @@ export async function POST(request: Request) {
     console.log("========================================\n");
 
     // Send email
-    if (process.env.RESEND_API_KEY) {
+    if (process.env.RESEND_API_KEY && MATT_EMAIL) {
       const resend = getResend();
       const itemsList = order.items
         .map((item) => `<li><strong>${item.toyName}</strong> — ${item.colors.join(", ")}</li>`)
